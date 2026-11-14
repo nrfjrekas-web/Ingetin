@@ -123,7 +123,7 @@ export function StoreProvider({ children }) {
     return masuk(r.data.user.id);
   };
 
-  // Daftar tanpa OTP: langsung dibuat dan masuk (kecuali pendaftaran ditutup Admin).
+  // Daftar tanpa OTP. Setelah akun dibuat, sesi ditutup dan pengguna kembali ke layar Masuk.
   const register = async (nm, hp, pin, pin2, kode) => {
     if (!TERHUBUNG) return BELUM;
     if (nm.trim().length < 2) return 'Nama lengkap wajib diisi.';
@@ -138,30 +138,31 @@ export function StoreProvider({ children }) {
     if (!r.data.session) return 'Di Supabase, matikan dulu "Confirm email" (Authentication > Providers > Email).';
     const uid = r.data.session.user.id;
 
+    // Cari pengundang lewat fungsi database (aman, tidak membuka data user lain).
     let pengundang = null;
     if (kode) {
-      const k = kode.trim().toUpperCase();
-      const c = await supabase
-        .from('profiles')
-        .select('id')
-        .or(`kode_referral.eq.${k},no_hp.eq.${kode.trim()}`)
-        .maybeSingle();
-      pengundang = c.data?.id || null;
+      const c = await supabase.rpc('cari_pengundang', { p_kode: kode });
+      pengundang = c.data || null;
     }
 
-    const ins = await supabase.from('profiles').insert({
-      id: uid,
-      nama: nm.trim(),
-      no_hp: hp,
-      kode_referral: buatKodeRef(),
-      diundang_oleh: pengundang,
-    });
+    // Kalau kode referral kebetulan bentrok (sangat jarang), coba lagi dengan kode baru.
+    let ins;
+    for (let i = 0; i < 3; i++) {
+      ins = await supabase.from('profiles').insert({
+        id: uid,
+        nama: nm.trim(),
+        no_hp: hp,
+        kode_referral: buatKodeRef(),
+        diundang_oleh: pengundang,
+      });
+      if (!(ins.error && ins.error.code === '23505' && /kode_referral/.test(ins.error.message))) break;
+    }
     if (ins.error && ins.error.code !== '23505') {
       await supabase.auth.signOut();
       return /policy|row-level/i.test(ins.error.message) ? 'Pendaftaran sedang ditutup. Hubungi Admin untuk dibuatkan akun.' : ins.error.message;
     }
-    await AsyncStorage.setItem('ingat', '1');
-    return masuk(uid);
+    await supabase.auth.signOut(); // setelah daftar, kembali ke layar Masuk
+    return null;
   };
 
   const logout = async () => { await supabase.auth.signOut(); setProfile(null); setData(EMPTY); };
