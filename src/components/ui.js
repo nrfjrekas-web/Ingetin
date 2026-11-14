@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { Platform, Pressable, ScrollView, StatusBar, Text, TextInput, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Platform, Pressable, ScrollView, StatusBar, Text, TextInput, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { C, tgl } from '../core/theme';
+import { C, rp, tgl } from '../core/theme';
 
 export const TOP = Platform.OS === 'android' ? StatusBar.currentHeight || 28 : 50;
 export const HERO = ['#1E40AF', '#2563EB', '#38BDF8'];
@@ -88,5 +88,22 @@ export function DateField({ label, value, onChange }) {
           onChange={(e, d) => { setShow(Platform.OS === 'ios'); if (e.type !== 'dismissed' && d) onChange(d); }} />
       )}
     </View>
+  );
+}
+
+// Isian uang: diketik 2000000 langsung tampil Rp 2.000.000. Nilai (value) tetap string angka murni.
+export const UangInput = ({ label, value, onChange }) => (
+  <Input label={label} value={value ? rp(Number(value)) : ''} placeholder="Rp 0" keyboardType="number-pad"
+    onChangeText={(t) => onChange(t.replace(/\D/g, '').slice(0, 12))} />
+);
+
+// Animasi masuk halus untuk setiap layar.
+export function FadeIn({ children, style }) {
+  const a = useRef(new Animated.Value(0)).current;
+  useEffect(() => { Animated.timing(a, { toValue: 1, duration: 260, useNativeDriver: true }).start(); }, []);
+  return (
+    <Animated.View style={[{ flex: 1, opacity: a, transform: [{ translateY: a.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }] }, style]}>
+      {children}
+    </Animated.View>
   );
 }
