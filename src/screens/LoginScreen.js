@@ -43,7 +43,7 @@ export default function LoginScreen() {
           <Grad style={{ paddingTop: TOP + 24, paddingBottom: 64, alignItems: 'center', borderBottomLeftRadius: 36, borderBottomRightRadius: 36 }}>
             <Image source={logo} style={{ width: 128, height: 128, borderRadius: 32 }} />
             <T style={{ color: '#fff', fontSize: 34, fontWeight: '900', marginTop: 12, letterSpacing: 2 }}>INGETIN</T>
-            <T style={{ color: '#DBEAFE', fontSize: 16 }}>Catatan bon, kas & hutang dusun</T>
+            <T style={{ color: '#DBEAFE', fontSize: 16 }}>Catatan All Transaksi</T>
           </Grad>
           <View style={{ paddingHorizontal: 16, marginTop: -32 }}>
             <Card style={{ padding: 20 }}>
