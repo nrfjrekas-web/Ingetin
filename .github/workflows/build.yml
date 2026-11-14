@@ -1,1 +1,27 @@
-
+name: Build APK (EAS)
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Siapkan proyek Expo dari kode Ingetin
+        run: |
+          npx create-expo-app@latest app --template blank --yes
+          rm -f app/App.js
+          cp App.js app/App.js
+          cp -r src app/src
+          cd app
+          npx expo install @react-native-async-storage/async-storage expo-crypto @react-native-community/datetimepicker
+          node -e "const f='app.json',j=require('./'+f);j.expo.name='Ingetin';j.expo.slug='ingetin';j.expo.android={...(j.expo.android||{}),package:'id.ingetin.app'};require('fs').writeFileSync(f,JSON.stringify(j,null,2))"
+          echo '{"build":{"preview":{"android":{"buildType":"apk"}}}}' > eas.json
+          eas init --force --non-interactive
+          eas build --platform android --profile preview --non-interactive --no-wait
