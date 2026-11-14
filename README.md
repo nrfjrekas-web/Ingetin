@@ -12,8 +12,6 @@ src/
   services/whatsapp.js        Tombol Ingatkan via WA (isi pesan di sini)
   components/ui.js            Tombol, kolom isian, kartu, pemilih tanggal
   screens/
-    LoginScreen.js            Login / daftar
-    ShellScreen.js            Kerangka + menu bawah
     BerandaScreen.js          Dashboard
     DaftarScreen.js           Daftar orang, cari, filter
     PersonScreen.js           Detail orang + riwayat
@@ -25,3 +23,8 @@ src/
 ## Belum ada
 Laporan + grafik + export, kas harian manual, sidik jari, notifikasi, sinkron server, batas percobaan PIN, koreksi/hapus pembayaran.
 Data tersimpan di HP (AsyncStorage), belum ke server.
+
+## Cloud (Supabase)
+- `supabase/schema.sql`: tempel dan Run sekali di Supabase SQL Editor (tabel, keamanan, fungsi admin).
+- `src/core/config.js`: isi URL dan kunci anon/publishable (JANGAN kunci service_role).
+- Layar admin: AdminHome, AdminUsers, AdminUser, AdminReports, AdminSettings (hanya terbuka untuk role admin_developer).
