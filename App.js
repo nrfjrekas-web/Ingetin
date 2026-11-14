@@ -37,7 +37,7 @@ function Router() {
 export default function App() {
   return (
     <StoreProvider>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
       <Router />
     </StoreProvider>
   );

@@ -1,5 +1,5 @@
 export const APP = 'Ingetin';
-export const C = { green: '#16A34A', red: '#DC2626', blue: '#2563EB', bg: '#F6F7F9', text: '#111827', muted: '#6B7280', line: '#D1D5DB' };
+export const C = { green: '#16A34A', red: '#DC2626', blue: '#2563EB', bg: '#F6F7F9', text: '#111827', muted: '#6B7280', yellow: '#FACC15', yellowDark: '#A16207', yellowBg: '#FEF9C3', navy: '#0B2A6F', line: '#D1D5DB' };
 const BLN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
 export const rp = (n) => 'Rp ' + Math.abs(Math.round(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
