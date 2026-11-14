@@ -67,6 +67,7 @@ export default function LoginScreen() {
   const [ingat, setIngat] = useState(true);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
+  const [info, setInfo] = useState(null);
   const angka = (f) => (v) => f(v.replace(/\D/g, ''));
 
   // Tangkap link otomatis (ingetin://daftar?ref=XXXXXX) saat aplikasi dibuka dari luar
@@ -88,10 +89,15 @@ export default function LoginScreen() {
     const no = nomorHP(hp);
     if (!no) return setErr('No HP harus diawali 08 dan 10-13 digit.');
     if (pin.length !== 6) return setErr('PIN harus 6 angka.');
-    setBusy(true); setErr(null);
+    setBusy(true); setErr(null); setInfo(null);
     const e = await (daftar ? register(nama, no, pin, pin2, kode) : login(no, pin, ingat));
     setBusy(false);
     if (e) setErr(e);
+    else if (daftar) {
+      // Akun sudah dibuat: kembali ke layar Masuk, No HP tetap terisi.
+      setDaftar(false); setPin(''); setPin2(''); setKode('');
+      setInfo('Akun berhasil dibuat. Silakan masuk dengan No HP dan PIN.');
+    }
   };
   const lupa = () => {
     const no = nomorHP(hp);
@@ -131,8 +137,9 @@ export default function LoginScreen() {
                 </Pressable>
               )}
               <Err>{err}</Err>
+              {info && !err && <T style={{ color: C.green, fontWeight: '800', marginBottom: 10 }}>{info}</T>}
               <Btn icon={daftar ? 'person-add' : 'log-in'} label={daftar ? 'BUAT AKUN & MASUK' : 'Masuk'} onPress={submit} disabled={busy} />
-              {(daftar || daftarDibuka) && <Btn outline label={daftar ? 'Sudah punya akun? Masuk' : 'Belum punya akun? Daftar'} onPress={() => { setDaftar(!daftar); setPin(''); setPin2(''); setErr(null); }} />}
+              {(daftar || daftarDibuka) && <Btn outline label={daftar ? 'Sudah punya akun? Masuk' : 'Belum punya akun? Daftar'} onPress={() => { setDaftar(!daftar); setPin(''); setPin2(''); setErr(null); setInfo(null); }} />}
               {!daftar && <Pressable onPress={lupa} style={{ minHeight: 48, justifyContent: 'center' }}><T style={{ color: C.blue, fontWeight: '800', textAlign: 'center' }}>Lupa PIN?</T></Pressable>}
             </Card>
           </View>
