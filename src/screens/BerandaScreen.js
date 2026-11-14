@@ -28,7 +28,7 @@ const Aksi = ({ label, icon, bg, fg, onPress }) => (
 );
 
 export default function BerandaScreen({ nav }) {
-  const { debts, person, sync } = useStore();
+  const { debts, person, sync, user } = useStore();
   const now = today();
   const open = debts.filter((d) => sisa(d) > 0);
   const total = (j) => open.filter((d) => d.jenis === j).reduce((a, d) => a + sisa(d), 0);
@@ -43,9 +43,11 @@ export default function BerandaScreen({ nav }) {
       <Grad style={{ paddingTop: TOP + 12, paddingHorizontal: 20, paddingBottom: 56, borderBottomLeftRadius: 32, borderBottomRightRadius: 32 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <Image source={logo} style={{ width: 52, height: 52, borderRadius: 14 }} />
-          <View style={{ marginLeft: 12 }}>
+          <View style={{ flex: 1, marginLeft: 12 }}>
             <T style={{ color: '#BFDBFE', fontSize: 15 }}>{sapa()} 👋</T>
-            <T style={{ color: '#fff', fontSize: 22, fontWeight: '900' }}>INGETIN</T>
+            <T style={{ color: '#fff', fontSize: 22, fontWeight: '900' }} numberOfLines={1}>
+              {user?.nama || user?.name || 'INGETIN'}
+            </T>
           </View>
         </View>
         <T style={{ color: '#DBEAFE', fontSize: 16, marginTop: 18 }}>Sisa Kas Bulan Ini</T>
@@ -117,4 +119,4 @@ export default function BerandaScreen({ nav }) {
       </View>
     </ScrollView>
   );
-}
+  }
