@@ -16,6 +16,20 @@ const dari = (s) => new Date(`${s}T00:00:00`).toISOString();
 const rapikanWA = (v) => { const n = nomorWA(v); return n ? '0' + n.slice(2) : ''; };
 const BELUM = 'Aplikasi belum disambungkan ke Supabase. Isi src/core/config.js.';
 
+// Pembuat 6 kode referral acak (huruf besar & angka tanpa karakter mirip seperti O/0/I/1)
+const buatKodeRef = (seed = '') => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let hasil = '';
+  const sumber = seed ? seed.replace(/[^a-zA-Z0-9]/g, '') : '';
+  for (let i = 0; i < 6; i++) {
+    const idx = sumber.length > i
+      ? (sumber.charCodeAt(i) + i * 7) % chars.length
+      : Math.floor(Math.random() * chars.length);
+    hasil += chars[idx];
+  }
+  return hasil;
+};
+
 export function StoreProvider({ children }) {
   const [ready, setReady] = useState(false);
   const [profile, setProfile] = useState(null);
@@ -52,12 +66,22 @@ export function StoreProvider({ children }) {
       if (c) setData(JSON.parse(c));
     }
   };
+
   const masuk = async (uid) => {
     const r = await supabase.from('profiles').select('*').eq('id', uid).maybeSingle();
     if (r.error) return 'Tidak bisa terhubung. Cek internet.';
     if (!r.data) { await supabase.auth.signOut(); return 'Akun tidak ditemukan. Hubungi Admin.'; }
     if (r.data.blokir) { await supabase.auth.signOut(); return 'Akun diblokir, hubungi Admin.'; }
-    setProfile(r.data);
+
+    // Jika akun lama belum punya kode_referral di database, otomatis buatkan & simpan
+    let prof = r.data;
+    if (!prof.kode_referral) {
+      const kodeOtomatis = buatKodeRef(uid);
+      prof = { ...prof, kode_referral: kodeOtomatis };
+      supabase.from('profiles').update({ kode_referral: kodeOtomatis }).eq('id', uid).then(() => {});
+    }
+
+    setProfile(prof);
     supabase.from('profiles').update({ terakhir_aktif: new Date().toISOString() }).eq('id', uid).then(() => {});
     await muat(uid);
     return null;
@@ -113,9 +137,25 @@ export function StoreProvider({ children }) {
     }
     if (!r.data.session) return 'Di Supabase, matikan dulu "Confirm email" (Authentication > Providers > Email).';
     const uid = r.data.session.user.id;
+
     let pengundang = null;
-    if (kode) { const c = await supabase.rpc('cari_pengundang', { p_no_hp: kode }); pengundang = c.data || null; }
-    const ins = await supabase.from('profiles').insert({ id: uid, nama: nm.trim(), no_hp: hp, diundang_oleh: pengundang });
+    if (kode) {
+      const k = kode.trim().toUpperCase();
+      const c = await supabase
+        .from('profiles')
+        .select('id')
+        .or(`kode_referral.eq.${k},no_hp.eq.${kode.trim()}`)
+        .maybeSingle();
+      pengundang = c.data?.id || null;
+    }
+
+    const ins = await supabase.from('profiles').insert({
+      id: uid,
+      nama: nm.trim(),
+      no_hp: hp,
+      kode_referral: buatKodeRef(),
+      diundang_oleh: pengundang,
+    });
     if (ins.error && ins.error.code !== '23505') {
       await supabase.auth.signOut();
       return /policy|row-level/i.test(ins.error.message) ? 'Pendaftaran sedang ditutup. Hubungi Admin untuk dibuatkan akun.' : ins.error.message;
@@ -123,6 +163,7 @@ export function StoreProvider({ children }) {
     await AsyncStorage.setItem('ingat', '1');
     return masuk(uid);
   };
+
   const logout = async () => { await supabase.auth.signOut(); setProfile(null); setData(EMPTY); };
 
   // Setiap ubah data: simpan ke cloud, lalu muat ulang supaya semua angka (termasuk Sisa Kas) ikut berubah.
@@ -137,6 +178,7 @@ export function StoreProvider({ children }) {
       Alert.alert('Belum tersimpan, cek internet', 'Coba lagi setelah internet lancar.');
     }
   };
+
   const addDebt = (f) => jalan(async () => {
     const wa = rapikanWA(f.wa);
     let p = data.persons.find((x) => x.nama.toLowerCase() === f.nama.toLowerCase());
@@ -150,18 +192,21 @@ export function StoreProvider({ children }) {
     return supabase.from('debts').insert({ user_id: profile.id, person_id: p.id, jenis: f.jenis, jumlah_awal: f.jumlah,
       keterangan: f.ket, tanggal_pinjam: fmt(f.pinjam), jatuh_tempo: fmt(f.tempo) });
   });
+
   const updateDebt = (id, f) => jalan(async () => {
     const d = data.debts.find((x) => x.id === id);
     await supabase.from('persons').update({ nama: f.nama, no_wa: rapikanWA(f.wa) }).eq('id', d.personId);
     return supabase.from('debts').update({ jenis: f.jenis, jumlah_awal: f.jumlah, keterangan: f.ket,
       tanggal_pinjam: fmt(f.pinjam), jatuh_tempo: fmt(f.tempo) }).eq('id', id);
   });
+
   const deleteDebt = (id) => jalan(() => supabase.from('debts').delete().eq('id', id));
   const addPay = (debtId, pay) => jalan(() => supabase.from('payments').insert({ user_id: profile.id, debt_id: debtId,
     jumlah_bayar: pay.jumlah, tanggal_bayar: fmt(pay.tgl), keterangan: pay.ket }));
 
   const value = {
     ready, profile, phone: profile ? profile.no_hp : null, nama: profile ? profile.nama : '',
+    kodeReferral: profile ? profile.kode_referral : '',
     isAdmin: !!profile && profile.role === 'admin_developer', sync, daftarDibuka, setDaftarDibuka,
     ...data, login, register, logout, addDebt, updateDebt, deleteDebt, addPay,
     person: (id) => data.persons.find((p) => p.id === id),
