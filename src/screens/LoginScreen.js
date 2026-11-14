@@ -1,5 +1,5 @@
-import React, { useRef, useState } from 'react';
-import { Image, Pressable, ScrollView, TextInput, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Image, Linking, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useStore } from '../store/store';
 import { Btn, Card, Err, FadeIn, Grad, Input, Page, T, TOP } from '../components/ui';
@@ -69,6 +69,21 @@ export default function LoginScreen() {
   const [err, setErr] = useState(null);
   const angka = (f) => (v) => f(v.replace(/\D/g, ''));
 
+  // Tangkap link otomatis (ingetin://daftar?ref=XXXXXX) saat aplikasi dibuka dari luar
+  useEffect(() => {
+    const bacaLink = (url) => {
+      if (!url) return;
+      const match = url.match(/[?&]ref=([A-Za-z0-9]{6})/i);
+      if (match || url.includes('daftar')) {
+        setDaftar(true);
+        if (match) setKode(match[1].toUpperCase());
+      }
+    };
+    Linking.getInitialURL().then(bacaLink);
+    const sub = Linking.addEventListener('url', (e) => bacaLink(e.url));
+    return () => sub.remove();
+  }, []);
+
   const submit = async () => {
     const no = nomorHP(hp);
     if (!no) return setErr('No HP harus diawali 08 dan 10-13 digit.');
@@ -99,7 +114,16 @@ export default function LoginScreen() {
               <Input label="No HP (WA)" value={hp} onChangeText={angka(setHp)} keyboardType="phone-pad" maxLength={13} placeholder="08xxxxxxxxxx" />
               <PinBox label="PIN 6 angka" value={pin} onChange={setPin} />
               {daftar && <PinBox label="Ulangi PIN" value={pin2} onChange={setPin2} />}
-              {daftar && <Input label="Kode undangan (No HP pengundang, boleh kosong)" value={kode} onChangeText={angka(setKode)} keyboardType="phone-pad" maxLength={13} />}
+              {daftar && (
+                <Input
+                  label="Kode referral (6 karakter, boleh kosong)"
+                  value={kode}
+                  onChangeText={(v) => setKode(v.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 6))}
+                  autoCapitalize="characters"
+                  maxLength={6}
+                  placeholder="Contoh: A7K92B"
+                />
+              )}
               {!daftar && (
                 <Pressable onPress={() => setIngat(!ingat)} style={{ flexDirection: 'row', alignItems: 'center', minHeight: 48, marginBottom: 6 }}>
                   <Ionicons name={ingat ? 'checkbox' : 'square-outline'} size={28} color={C.blue} />
