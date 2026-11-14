@@ -28,7 +28,7 @@ const Aksi = ({ label, icon, bg, fg, onPress }) => (
 );
 
 export default function BerandaScreen({ nav }) {
-  const { debts, person, sync, user } = useStore();
+  const { debts, person, sync, nama } = useStore();
   const now = today();
   const open = debts.filter((d) => sisa(d) > 0);
   const total = (j) => open.filter((d) => d.jenis === j).reduce((a, d) => a + sisa(d), 0);
@@ -46,7 +46,7 @@ export default function BerandaScreen({ nav }) {
           <View style={{ flex: 1, marginLeft: 12 }}>
             <T style={{ color: '#BFDBFE', fontSize: 15 }}>{sapa()} 👋</T>
             <T style={{ color: '#fff', fontSize: 22, fontWeight: '900' }} numberOfLines={1}>
-              {user?.nama || user?.name || 'INGETIN'}
+              {nama || 'INGETIN'}
             </T>
           </View>
         </View>
@@ -119,4 +119,4 @@ export default function BerandaScreen({ nav }) {
       </View>
     </ScrollView>
   );
-  }
+}
