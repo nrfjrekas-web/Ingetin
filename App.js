@@ -34,7 +34,7 @@ function Splash({ onDone }) {
     <Grad style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
       <Animated.Image source={logo} style={{ width: 150, height: 150, borderRadius: 38, opacity: s, transform: [{ scale: s.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }) }] }} />
       <Animated.Text style={{ opacity: s, color: '#fff', fontSize: 34, fontWeight: '900', marginTop: 16, letterSpacing: 2 }}>INGETIN</Animated.Text>
-      <Animated.Text style={{ opacity: s, color: '#DBEAFE', fontSize: 16 }}>Catatan bon, kas & hutang dusun</Animated.Text>
+      <Animated.Text style={{ opacity: s, color: '#DBEAFE', fontSize: 16 }}>Catatan All Transaksi</Animated.Text>
     </Grad>
   );
 }
