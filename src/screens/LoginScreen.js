@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Image, Pressable, ScrollView, View } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { Image, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useStore } from '../store/store';
 import { Btn, Card, Err, FadeIn, Grad, Input, Page, T, TOP } from '../components/ui';
@@ -8,6 +8,53 @@ import { nomorHP } from '../core/phone';
 import { bukaWA } from '../services/whatsapp';
 
 const logo = require('../../assets/icon.png');
+
+const PinBox = ({ label, value = '', onChange }) => {
+  const inputRef = useRef(null);
+
+  return (
+    <View style={{ marginBottom: 14 }}>
+      <T style={{ fontWeight: '800', marginBottom: 6 }}>{label}</T>
+      <Pressable
+        onPress={() => inputRef.current?.focus()}
+        style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}
+      >
+        <TextInput
+          ref={inputRef}
+          value={value}
+          onChangeText={(v) => onChange(v.replace(/\D/g, '').slice(0, 6))}
+          keyboardType="number-pad"
+          maxLength={6}
+          caretHidden
+          style={{ position: 'absolute', opacity: 0, width: 1, height: 1 }}
+        />
+        {[0, 1, 2, 3, 4, 5].map((i) => {
+          const digit = value[i];
+          const aktif = value.length === i || (value.length === 6 && i === 5);
+          return (
+            <View
+              key={i}
+              style={{
+                flex: 1,
+                height: 52,
+                borderRadius: 12,
+                borderWidth: aktif ? 2 : 1.5,
+                borderColor: aktif ? C.blue : digit ? '#93C5FD' : '#CBD5E1',
+                backgroundColor: digit ? '#EFF6FF' : '#F8FAFC',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <T style={{ fontSize: 22, fontWeight: '900', color: C.navy }}>
+                {digit ? '●' : ''}
+              </T>
+            </View>
+          );
+        })}
+      </Pressable>
+    </View>
+  );
+};
 
 export default function LoginScreen() {
   const { login, register, daftarDibuka } = useStore();
@@ -50,8 +97,8 @@ export default function LoginScreen() {
               <T style={{ fontWeight: '900', fontSize: 22, marginBottom: 14 }}>{daftar ? 'Buat akun baru' : 'Masuk'}</T>
               {daftar && <Input label="Nama lengkap" value={nama} onChangeText={setNama} />}
               <Input label="No HP (WA)" value={hp} onChangeText={angka(setHp)} keyboardType="phone-pad" maxLength={13} placeholder="08xxxxxxxxxx" />
-              <Input label="PIN 6 angka" value={pin} onChangeText={angka(setPin)} keyboardType="number-pad" secureTextEntry maxLength={6} />
-              {daftar && <Input label="Ulangi PIN" value={pin2} onChangeText={angka(setPin2)} keyboardType="number-pad" secureTextEntry maxLength={6} />}
+              <PinBox label="PIN 6 angka" value={pin} onChange={setPin} />
+              {daftar && <PinBox label="Ulangi PIN" value={pin2} onChange={setPin2} />}
               {daftar && <Input label="Kode undangan (No HP pengundang, boleh kosong)" value={kode} onChangeText={angka(setKode)} keyboardType="phone-pad" maxLength={13} />}
               {!daftar && (
                 <Pressable onPress={() => setIngat(!ingat)} style={{ flexDirection: 'row', alignItems: 'center', minHeight: 48, marginBottom: 6 }}>
@@ -61,7 +108,7 @@ export default function LoginScreen() {
               )}
               <Err>{err}</Err>
               <Btn icon={daftar ? 'person-add' : 'log-in'} label={daftar ? 'BUAT AKUN & MASUK' : 'Masuk'} onPress={submit} disabled={busy} />
-              {(daftar || daftarDibuka) && <Btn outline label={daftar ? 'Sudah punya akun? Masuk' : 'Belum punya akun? Daftar'} onPress={() => { setDaftar(!daftar); setErr(null); }} />}
+              {(daftar || daftarDibuka) && <Btn outline label={daftar ? 'Sudah punya akun? Masuk' : 'Belum punya akun? Daftar'} onPress={() => { setDaftar(!daftar); setPin(''); setPin2(''); setErr(null); }} />}
               {!daftar && <Pressable onPress={lupa} style={{ minHeight: 48, justifyContent: 'center' }}><T style={{ color: C.blue, fontWeight: '800', textAlign: 'center' }}>Lupa PIN?</T></Pressable>}
             </Card>
           </View>
