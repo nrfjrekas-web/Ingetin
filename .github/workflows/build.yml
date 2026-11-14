@@ -1,8 +1,17 @@
 name: Build APK (EAS)
 on:
   workflow_dispatch:
+    inputs:
+      aksi:
+        description: 'build = buat APK baru, update = kirim pembaruan ke HP'
+        type: choice
+        options: [build, update]
+        default: build
+  push:
+    branches: [main]
+    paths: ['App.js', 'src/**', 'assets/**']
 jobs:
-  build:
+  eas:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,9 +28,21 @@ jobs:
           rm -f app/App.js
           cp App.js app/App.js
           cp -r src app/src
+          mkdir -p app/assets
+          cp -r assets/. app/assets/
           cd app
-          npx expo install @react-native-async-storage/async-storage expo-crypto @react-native-community/datetimepicker
-          node -e "const f='app.json',j=require('./'+f);j.expo.name='Ingetin';j.expo.slug='ingetin';j.expo.android={...(j.expo.android||{}),package:'id.ingetin.app'};require('fs').writeFileSync(f,JSON.stringify(j,null,2))"
-          echo '{"build":{"preview":{"android":{"buildType":"apk"}}}}' > eas.json
+          npx expo install @react-native-async-storage/async-storage expo-crypto @react-native-community/datetimepicker expo-linear-gradient @expo/vector-icons expo-updates
+          node -e "const f='app.json',j=require('./'+f);j.expo.name='Ingetin';j.expo.slug='ingetin';j.expo.version='1.0.0';j.expo.icon='./assets/icon.png';j.expo.userInterfaceStyle='light';j.expo.runtimeVersion={policy:'appVersion'};j.expo.android={...(j.expo.android||{}),package:'id.ingetin.app',adaptiveIcon:{foregroundImage:'./assets/adaptive-icon.png',backgroundColor:'#1A92F1'}};require('fs').writeFileSync(f,JSON.stringify(j,null,2))"
+          echo '{"build":{"preview":{"channel":"preview","android":{"buildType":"apk"}}}}' > eas.json
           eas init --force --non-interactive
-          eas build --platform android --profile preview --non-interactive --no-wait
+          node -e "const f='app.json',j=require('./'+f);j.expo.updates={url:'https://u.expo.dev/'+j.expo.extra.eas.projectId};require('fs').writeFileSync(f,JSON.stringify(j,null,2))"
+      - name: Kirim pembaruan otomatis ke HP
+        if: github.event_name == 'push' || inputs.aksi == 'update'
+        working-directory: app
+        env:
+          PESAN: ${{ github.event.head_commit.message || 'Pembaruan manual' }}
+        run: eas update --channel preview --message "$PESAN" --non-interactive
+      - name: Build APK baru
+        if: github.event_name == 'workflow_dispatch' && inputs.aksi == 'build'
+        working-directory: app
+        run: eas build --platform android --profile preview --non-interactive --no-wait
