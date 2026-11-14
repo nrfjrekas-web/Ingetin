@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { TextInput, View } from 'react-native';
 import { useStore } from '../store/store';
-import { Body, Card, Chip, T } from '../components/ui';
+import { Body, Card, Chip, Header, Page, T } from '../components/ui';
 import { C, rp, sisa, status, tgl } from '../core/theme';
 
 const FILTER = ['Semua', 'Belum Lunas', 'Lunas', 'Lewat Tempo'];
@@ -19,6 +19,8 @@ export default function DaftarScreen({ nav }) {
   const list = persons.filter((p) => p.nama.toLowerCase().includes(q.toLowerCase()) && (f === 'Semua' || st(p) === f));
 
   return (
+    <Page>
+    <Header title="Hutang & Piutang" />
     <Body>
       <TextInput value={q} onChangeText={setQ} placeholder="Cari nama" placeholderTextColor="#9CA3AF"
         style={{ minHeight: 52, borderWidth: 1, borderColor: C.line, borderRadius: 10, paddingHorizontal: 14, fontSize: 18, backgroundColor: '#fff', marginBottom: 10 }} />
@@ -41,6 +43,7 @@ export default function DaftarScreen({ nav }) {
                 <T style={{ fontWeight: '800' }}>{p.nama}</T>
                 {jml('piutang') > 0 && <T style={{ fontSize: 16, color: C.green, fontWeight: '700' }}>Dia hutang {rp(jml('piutang'))}</T>}
                 {jml('hutang') > 0 && <T style={{ fontSize: 16, color: C.red, fontWeight: '700' }}>Saya hutang {rp(jml('hutang'))}</T>}
+                {s === 'Lunas' && <T style={{ fontSize: 16, color: C.green, fontWeight: '700' }}>Total pernah hutang {rp(debtsOf(p.id).reduce((a, d) => a + d.awal, 0))} - Sudah Lunas</T>}
                 {tempo && <T style={{ fontSize: 15, color: C.muted }}>Tempo {tgl(tempo)}</T>}
               </View>
               <Chip label={s.toUpperCase()} color={WARNA[s]} selected />
@@ -49,5 +52,6 @@ export default function DaftarScreen({ nav }) {
         );
       })}
     </Body>
+    </Page>
   );
 }

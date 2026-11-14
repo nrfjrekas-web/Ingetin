@@ -3,7 +3,7 @@ import { Image, Pressable, ScrollView, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useStore } from '../store/store';
 import { Avatar, Card, Chip, Grad, T, TOP } from '../components/ui';
-import { C, dayDiff, rp, sisa, status, tgl, today } from '../core/theme';
+import { C, dayDiff, hitungUlangSisaKas, rp, sisa, status, tgl, today } from '../core/theme';
 import { kirimWA } from '../services/whatsapp';
 
 const logo = require('../../assets/icon.png');
@@ -28,15 +28,11 @@ const Aksi = ({ label, icon, bg, fg, onPress }) => (
 );
 
 export default function BerandaScreen({ nav }) {
-  const { debts, person } = useStore();
+  const { debts, person, sync } = useStore();
   const now = today();
   const open = debts.filter((d) => sisa(d) > 0);
   const total = (j) => open.filter((d) => d.jenis === j).reduce((a, d) => a + sisa(d), 0);
-  let kas = 0; // pembayaran piutang masuk dikurangi hutang yang dibayar, bulan ini
-  debts.forEach((d) => d.pays.forEach((p) => {
-    const x = new Date(p.tgl);
-    if (x.getFullYear() === now.getFullYear() && x.getMonth() === now.getMonth()) kas += d.jenis === 'piutang' ? p.jumlah : -p.jumlah;
-  }));
+  const kas = hitungUlangSisaKas(debts);
   const rem = open.filter((d) => d.jenis === 'piutang' && dayDiff(d.tempo, now) <= 3)
     .sort((a, b) => new Date(a.tempo) - new Date(b.tempo));
   const latest = [...open].sort((a, b) => new Date(b.pinjam) - new Date(a.pinjam)).slice(0, 5);
@@ -49,12 +45,13 @@ export default function BerandaScreen({ nav }) {
           <Image source={logo} style={{ width: 52, height: 52, borderRadius: 14 }} />
           <View style={{ marginLeft: 12 }}>
             <T style={{ color: '#BFDBFE', fontSize: 15 }}>{sapa()} 👋</T>
-            <T style={{ color: '#fff', fontSize: 22, fontWeight: '900' }}>Ingetin</T>
+            <T style={{ color: '#fff', fontSize: 22, fontWeight: '900' }}>INGETIN</T>
           </View>
         </View>
         <T style={{ color: '#DBEAFE', fontSize: 16, marginTop: 18 }}>Sisa Kas Bulan Ini</T>
-        <T style={{ color: '#fff', fontSize: 38, fontWeight: '900' }} numberOfLines={1} adjustsFontSizeToFit>{(kas < 0 ? '-' : '') + rp(kas)}</T>
-        <T style={{ color: '#BFDBFE', fontSize: 13 }}>Pembayaran masuk dikurangi yang dibayar, bulan ini</T>
+        <T style={{ color: '#fff', fontSize: 38, fontWeight: '900' }} numberOfLines={1} adjustsFontSizeToFit>{(kas.sisa < 0 ? '-' : '') + rp(kas.sisa)}</T>
+        <T style={{ color: '#BFDBFE', fontSize: 13 }}>{`Uang masuk ${rp(kas.masuk)} - uang keluar ${rp(kas.keluar)} bulan ini`}</T>
+        <T style={{ color: sync === 'gagal' ? '#FDE68A' : '#BFDBFE', fontSize: 13, fontWeight: '800', marginTop: 2 }}>{sync === 'ok' ? 'Tersimpan di Cloud ✓' : sync === 'menyimpan' ? 'Menyimpan...' : 'Belum tersimpan, cek internet'}</T>
       </Grad>
 
       <View style={{ flexDirection: 'row', paddingHorizontal: 16, marginTop: -32, gap: 12 }}>
