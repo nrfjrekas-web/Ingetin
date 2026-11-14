@@ -27,7 +27,7 @@ export default function DaftarScreen({ nav }) {
       <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
         {FILTER.map((s) => <Chip key={s} label={s} selected={f === s} onPress={() => setF(s)} />)}
       </View>
-      {list.length === 0 && <T>Tidak ada data yang cocok.</T>}
+      {list.length === 0 && <T>Tidak ada data</T>}
       {list.map((p) => {
         const ds = debtsOf(p.id).filter((d) => sisa(d) > 0);
         const jml = (j) => ds.filter((d) => d.jenis === j).reduce((a, d) => a + sisa(d), 0);
