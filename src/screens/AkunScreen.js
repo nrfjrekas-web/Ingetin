@@ -118,12 +118,12 @@ export default function AkunScreen({ nav }) {
       <Header
         title="Akun"
         right={
-          <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff22', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 }}>
+         /* <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff22', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 }}>
             <Ionicons name={sync === 'ok' ? 'cloud-done' : 'cloud-offline'} size={15} color="#fff" />
-           /* <T style={{ color: '#fff', fontSize: 12, fontWeight: '800', marginLeft: 5 }}>
+            <T style={{ color: '#fff', fontSize: 12, fontWeight: '800', marginLeft: 5 }}>
               {sync === 'ok' ? 'Cloud Aktif' : 'Offline'}
-            </T> */
-          </View>
+            </T> 
+          </View>*/
         }
       />
       <Body>
