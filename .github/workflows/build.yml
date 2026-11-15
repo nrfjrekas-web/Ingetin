@@ -31,7 +31,7 @@ jobs:
           mkdir -p app/assets
           cp -r assets/. app/assets/
           cd app
-          npx expo install @react-native-async-storage/async-storage expo-crypto @react-native-community/datetimepicker expo-linear-gradient @expo/vector-icons expo-updates @supabase/supabase-js react-native-url-polyfill
+          npx expo install @react-native-async-storage/async-storage expo-crypto @react-native-community/datetimepicker expo-linear-gradient @expo/vector-icons expo-updates @supabase/supabase-js react-native-url-polyfill react-native-view-shot expo-sharing
           node -e "const f='app.json',j=require('./'+f);j.expo.name='INGETIN';j.expo.slug='ingetin';j.expo.icon='./assets/icon.png';j.expo.userInterfaceStyle='light';j.expo.runtimeVersion={policy:'appVersion'};j.expo.android={...(j.expo.android||{}),package:'id.ingetin.app',adaptiveIcon:{foregroundImage:'./assets/adaptive-icon.png',backgroundColor:'#1A92F1'}};require('fs').writeFileSync(f,JSON.stringify(j,null,2))"
           echo '{"build":{"preview":{"channel":"preview","android":{"buildType":"apk"}}}}' > eas.json
           eas init --force --non-interactive
