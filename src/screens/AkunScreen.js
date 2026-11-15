@@ -84,7 +84,7 @@ export default function AkunScreen({ nav }) {
 
   const undang = () =>
     Share.share({
-      message: `Yuk pakai ${APP}, aplikasi catatan bon, kas & hutang!\n\nKlik link ini untuk langsung daftar otomatis:\n${linkUndangan}\n\nAtau masukkan Kode Referral: *${kodeRef}*`,
+      message: `Yuk pakai ${APP}, aplikasi catatan all transaksi!\n\nKlik link ini untuk langsung daftar otomatis:\n${linkUndangan}\n\nAtau masukkan Kode Referral: *${kodeRef}*`,
     });
 
   const simpanProfil = async () => {
