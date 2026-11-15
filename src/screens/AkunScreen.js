@@ -1,10 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { Alert, Clipboard, Modal, Pressable, Share, Switch, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Alert, Clipboard, ImageBackground, Modal, Pressable, Share, Switch, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
 import { supabase } from '../services/supabase';
 import { useStore } from '../store/store';
 import { Avatar, Body, Btn, Card, Chip, Header, Input, Page, T } from '../components/ui';
 import { APP, C, addDays, tgl, today } from '../core/theme';
+
+const bannerImg = require('../../assets/banner-referral.png');
 
 const MenuRow = ({ icon, title, sub, color = C.blue, onPress, right, last }) => (
   <Pressable
@@ -50,10 +54,11 @@ export default function AkunScreen({ nav }) {
   const [namaBaru, setNamaBaru] = useState(nama);
   const [pinBaru, setPinBaru] = useState('');
   const [saving, setSaving] = useState(false);
+  const [sharingImg, setSharingImg] = useState(false);
+  const posterRef = useRef(null);
 
   // Ambil kode dari store atau langsung dari profile.kode_referral
   const kodeRef = (kodeReferral || profile?.kode_referral || '').toUpperCase();
-  const linkUndangan = kodeRef ? `ingetin://daftar?ref=${kodeRef}` : '';
 
   useEffect(() => {
     supabase
@@ -76,16 +81,30 @@ export default function AkunScreen({ nav }) {
     Alert.alert('Tersalin', `Kode referral (${kodeRef}) berhasil disalin.`);
   };
 
-  const salinLink = () => {
-    if (!linkUndangan) return;
-    Clipboard.setString(linkUndangan);
-    Alert.alert('Link Tersalin', 'Link undangan otomatis berhasil disalin.');
+  const undangDenganGambar = async () => {
+    const pesan = `Yuk pakai ${APP}, aplikasi catatan all transaksi!\n\nMasukkan Kode Referral saya saat daftar:\n*${kodeRef}*`;
+    Clipboard.setString(pesan);
+    setSharingImg(true);
+    try {
+      const uri = await captureRef(posterRef, {
+        format: 'png',
+        quality: 1,
+        result: 'tmpfile',
+      });
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, {
+          mimeType: 'image/png',
+          dialogTitle: `Bagikan Kode Referral ${APP}`,
+        });
+      } else {
+        await Share.share({ message: pesan });
+      }
+    } catch (e) {
+      await Share.share({ message: pesan });
+    } finally {
+      setSharingImg(false);
+    }
   };
-
-  const undang = () =>
-    Share.share({
-      message: `Yuk pakai ${APP}, aplikasi catatan all transaksi!\n\nKlik link ini untuk langsung daftar otomatis:\n${linkUndangan}\n\nAtau masukkan Kode Referral: *${kodeRef}*`,
-    });
 
   const simpanProfil = async () => {
     if (namaBaru.trim().length < 2) return Alert.alert('Gagal', 'Nama minimal 2 huruf.');
@@ -118,12 +137,13 @@ export default function AkunScreen({ nav }) {
       <Header
         title="Akun"
         right={
-         /* <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff22', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 }}>
+          /* <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff22', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 }}>
             <Ionicons name={sync === 'ok' ? 'cloud-done' : 'cloud-offline'} size={15} color="#fff" />
             <T style={{ color: '#fff', fontSize: 12, fontWeight: '800', marginLeft: 5 }}>
               {sync === 'ok' ? 'Cloud Aktif' : 'Offline'}
             </T> 
           </View>*/
+          null
         }
       />
       <Body>
@@ -171,33 +191,65 @@ export default function AkunScreen({ nav }) {
           </View>
         )}
 
-        {/* Ajak Teman & Kode Referral 6 Karakter */}
+        {/* Ajak Teman & Poster Kode Referral 6 Karakter */}
         <T style={{ fontWeight: '900', fontSize: 18, marginTop: 12, marginBottom: 8 }}>Ajak Teman Pakai {APP}</T>
-        <Card style={{ padding: 14 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#F8FAFC', padding: 12, borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0', marginBottom: 8 }}>
-            <View>
-              <T style={{ fontSize: 12, color: C.muted }}>Kode Referral Anda</T>
-              <T style={{ fontSize: 22, fontWeight: '900', color: C.navy, letterSpacing: 3 }}>{kodeRef || '------'}</T>
-            </View>
-            <Pressable onPress={salinKode} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#DBEAFE', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 }}>
-              <Ionicons name="copy-outline" size={16} color={C.blue} />
-              <T style={{ color: C.blue, fontWeight: '800', fontSize: 13, marginLeft: 4 }}>Salin Kode</T>
-            </Pressable>
+        <Card style={{ padding: 12 }}>
+          <View
+            ref={posterRef}
+            collapsable={false}
+            style={{ borderRadius: 16, overflow: 'hidden', marginBottom: 12, aspectRatio: 1.5, width: '100%' }}
+          >
+            <ImageBackground
+              source={bannerImg}
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="cover"
+            >
+              <View
+                style={{
+                  position: 'absolute',
+                  top: '39.8%',
+                  left: '42.5%',
+                  width: '48.5%',
+                  height: '17%',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                <T
+                  style={{
+                    fontSize: 27,
+                    fontWeight: '900',
+                    color: '#1E3A8A',
+                    letterSpacing: 4,
+                    textAlign: 'center',
+                  }}
+                >
+                  {kodeRef || '------'}
+                </T>
+              </View>
+            </ImageBackground>
           </View>
 
-          {!!linkUndangan && (
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#EFF6FF', padding: 10, borderRadius: 12, borderWidth: 1, borderColor: '#BFDBFE', marginBottom: 10 }}>
-              <View style={{ flex: 1, marginRight: 8 }}>
-                <T style={{ fontSize: 11, color: C.blue, fontWeight: '700' }}>Link Daftar Otomatis</T>
-                <T style={{ fontSize: 13, color: C.navy, fontWeight: '800' }} numberOfLines={1}>{linkUndangan}</T>
-              </View>
-              <Pressable onPress={salinLink} style={{ backgroundColor: C.blue, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8 }}>
-                <T style={{ color: '#fff', fontWeight: '800', fontSize: 12 }}>Salin Link</T>
-              </Pressable>
-            </View>
-          )}
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <Pressable
+              onPress={salinKode}
+              style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#DBEAFE', paddingVertical: 12, borderRadius: 12 }}
+            >
+              <Ionicons name="copy-outline" size={18} color={C.blue} />
+              <T style={{ color: C.blue, fontWeight: '800', fontSize: 14, marginLeft: 6 }}>Salin Kode</T>
+            </Pressable>
 
-          <Btn outline icon="person-add" label="Bagikan Link & Kode Undangan" onPress={undang} />
+            <Pressable
+              onPress={undangDenganGambar}
+              disabled={sharingImg}
+              style={{ flex: 1.4, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: C.blue, paddingVertical: 12, borderRadius: 12 }}
+            >
+              <Ionicons name="share-social" size={18} color="#fff" />
+              <T style={{ color: '#fff', fontWeight: '800', fontSize: 14, marginLeft: 6 }}>
+                {sharingImg ? 'Menyiapkan...' : 'Bagikan Poster & Kode'}
+              </T>
+            </Pressable>
+          </View>
         </Card>
 
         {/* Daftar Anggota Yang Diundang */}
