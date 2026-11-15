@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Clipboard, ImageBackground, Modal, Pressable, Share, Switch, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
 import { supabase } from '../services/supabase';
 import { useStore } from '../store/store';
 import { Avatar, Body, Btn, Card, Chip, Header, Input, Page, T } from '../components/ui';
@@ -52,6 +54,8 @@ export default function AkunScreen({ nav }) {
   const [namaBaru, setNamaBaru] = useState(nama);
   const [pinBaru, setPinBaru] = useState('');
   const [saving, setSaving] = useState(false);
+  const [sharingImg, setSharingImg] = useState(false);
+  const posterRef = useRef(null);
 
   const kodeRef = (kodeReferral || profile?.kode_referral || '').toUpperCase();
 
@@ -76,10 +80,29 @@ export default function AkunScreen({ nav }) {
     Alert.alert('Tersalin', `Kode referral (${kodeRef}) berhasil disalin.`);
   };
 
-  const bagikanTeks = () => {
+  const bagikanGambarDanKode = async () => {
     const pesan = `Yuk pakai ${APP}, aplikasi catatan all transaksi!\n\nMasukkan Kode Referral saya saat daftar:\n*${kodeRef}*`;
-    Clipboard.setString(kodeRef);
-    Share.share({ message: pesan });
+    Clipboard.setString(pesan);
+    setSharingImg(true);
+    try {
+      const uri = await captureRef(posterRef, {
+        format: 'png',
+        quality: 1,
+        result: 'tmpfile',
+      });
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, {
+          mimeType: 'image/png',
+          dialogTitle: `Bagikan Kode Referral ${APP}`,
+        });
+      } else {
+        await Share.share({ message: pesan });
+      }
+    } catch (e) {
+      await Share.share({ message: pesan });
+    } finally {
+      setSharingImg(false);
+    }
   };
 
   const simpanProfil = async () => {
@@ -161,37 +184,43 @@ export default function AkunScreen({ nav }) {
         <Card style={{ padding: 12 }}>
           <Pressable
             onPress={() => setModalPoster(true)}
-            style={{ borderRadius: 16, overflow: 'hidden', marginBottom: 12, aspectRatio: 1.5, width: '100%' }}
+            style={{ marginBottom: 12 }}
           >
-            <ImageBackground
-              source={bannerImg}
-              style={{ width: '100%', height: '100%' }}
-              resizeMode="cover"
+            <View
+              ref={posterRef}
+              collapsable={false}
+              style={{ borderRadius: 16, overflow: 'hidden', aspectRatio: 1.5, width: '100%' }}
             >
-              <View
-                style={{
-                  position: 'absolute',
-                  top: '39.8%',
-                  left: '42.5%',
-                  width: '48.5%',
-                  height: '17%',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
+              <ImageBackground
+                source={bannerImg}
+                style={{ width: '100%', height: '100%' }}
+                resizeMode="cover"
               >
-                <T
+                <View
                   style={{
-                    fontSize: 27,
-                    fontWeight: '900',
-                    color: '#1E3A8A',
-                    letterSpacing: 4,
-                    textAlign: 'center',
+                    position: 'absolute',
+                    top: '39.8%',
+                    left: '42.5%',
+                    width: '48.5%',
+                    height: '17%',
+                    justifyContent: 'center',
+                    alignItems: 'center',
                   }}
                 >
-                  {kodeRef || '------'}
-                </T>
-              </View>
-            </ImageBackground>
+                  <T
+                    style={{
+                      fontSize: 27,
+                      fontWeight: '900',
+                      color: '#1E3A8A',
+                      letterSpacing: 4,
+                      textAlign: 'center',
+                    }}
+                  >
+                    {kodeRef || '------'}
+                  </T>
+                </View>
+              </ImageBackground>
+            </View>
           </Pressable>
 
           <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -204,11 +233,14 @@ export default function AkunScreen({ nav }) {
             </Pressable>
 
             <Pressable
-              onPress={bagikanTeks}
+              onPress={bagikanGambarDanKode}
+              disabled={sharingImg}
               style={{ flex: 1.4, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: C.blue, paddingVertical: 12, borderRadius: 12 }}
             >
               <Ionicons name="share-social" size={18} color="#fff" />
-              <T style={{ color: '#fff', fontWeight: '800', fontSize: 14, marginLeft: 6 }}>Bagikan Kode</T>
+              <T style={{ color: '#fff', fontWeight: '800', fontSize: 14, marginLeft: 6 }}>
+                {sharingImg ? 'Menyiapkan...' : 'Bagikan Kode'}
+              </T>
             </Pressable>
           </View>
         </Card>
@@ -263,7 +295,7 @@ export default function AkunScreen({ nav }) {
         </T>
       </Body>
 
-      {/* Modal Preview Banner Layar Penuh (Tinggal Screenshot untuk Status WA) */}
+      {/* Modal Preview Banner Layar Penuh */}
       <Modal visible={modalPoster} transparent animationType="fade">
         <Pressable
           onPress={() => setModalPoster(false)}
@@ -279,7 +311,7 @@ export default function AkunScreen({ nav }) {
             </ImageBackground>
           </View>
           <T style={{ color: '#fff', fontSize: 13, marginTop: 12, textAlign: 'center' }}>
-            Screenshot layar ini untuk dijadikan Status WA · Ketuk mana saja untuk tutup
+            Ketuk mana saja untuk tutup
           </T>
         </Pressable>
       </Modal>
