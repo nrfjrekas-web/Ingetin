@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "520988751636",
+    "project_id": "ingetin-67888",
+    "storage_bucket": "ingetin-67888.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:520988751636:android:50f8c47f993df149f0f401",
+        "android_client_info": {
+          "package_name": "id.ingetin.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHL1Mqq4Jbpg-aVQPm7BVf_X4hzHOpNf4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
