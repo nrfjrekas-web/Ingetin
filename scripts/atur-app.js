@@ -1,4 +1,3 @@
-// Mengatur app.json proyek Expo yang dibuat otomatis oleh build.yml. Ubah di sini: nama, versi, izin, pengaturan ukuran APK.
 const fs = require('fs');
 const j = JSON.parse(fs.readFileSync('app.json', 'utf8'));
 const e = j.expo;
@@ -7,15 +6,13 @@ const tambah = (nama, opsi) => { e.plugins = (e.plugins || []).filter((p) => (Ar
 
 if (tahap === 'awal') {
   e.name = 'INGETIN'; e.slug = 'ingetin';
-  e.version = '1.1.0'; // NAIKKAN angka ini setiap menambah modul native baru, lalu build APK baru
+  e.version = '1.1.0';
   e.scheme = 'ingetin';
   e.icon = './assets/icon.png'; e.userInterfaceStyle = 'light';
   e.runtimeVersion = { policy: 'appVersion' };
   e.android = { ...(e.android || {}), package: 'id.ingetin.app',
     adaptiveIcon: { foregroundImage: './assets/adaptive-icon.png', backgroundColor: '#1A92F1' } };
   if (fs.existsSync('google-services.json')) e.android.googleServicesFile = './google-services.json';
-  // APK ringan: hanya prosesor HP modern (64-bit + 32-bit lama), kode dikecilkan, sumber daya tak terpakai dibuang.
-  // Mau lebih kecil lagi (HP sangat tua tidak didukung): hapus 'armeabi-v7a'.
   tambah('expo-build-properties', { android: { buildArchs: ['arm64-v8a', 'armeabi-v7a'], enableProguardInReleaseBuilds: true, enableShrinkResourcesInReleaseBuilds: true } });
   tambah('expo-notifications', { color: '#2563EB' });
   tambah('expo-image-picker', { photosPermission: 'INGETIN memakai foto untuk bukti nota.', cameraPermission: 'INGETIN memakai kamera untuk foto bukti nota.', microphonePermission: false });
