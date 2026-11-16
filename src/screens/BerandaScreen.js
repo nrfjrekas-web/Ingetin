@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, Pressable, ScrollView, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useStore } from '../store/store';
+import { supabase } from '../services/supabase';
 import { Avatar, Card, Chip, Grad, T, TOP } from '../components/ui';
 import { C, dayDiff, hitungUlangSisaKas, rp, sisa, status, tgl, today } from '../core/theme';
 import { kirimWA } from '../services/whatsapp';
 
-const logo = require('../../assets/icon.png');
+const logo = require('../../assets/logo.png');
 const sapa = () => { const h = new Date().getHours(); return h < 11 ? 'Selamat pagi' : h < 15 ? 'Selamat siang' : h < 18 ? 'Selamat sore' : 'Selamat malam'; };
 
 const Total = ({ label, sub, nilai, colors, icon }) => (
@@ -28,12 +29,16 @@ const Aksi = ({ label, icon, bg, fg, onPress }) => (
 );
 
 export default function BerandaScreen({ nav }) {
-  const { debts, person, sync, nama } = useStore();
+  const { debts, person, sync, nama, kas: kasManual } = useStore();
+  const [baru, setBaru] = useState(0);
+  useEffect(() => {
+    supabase.from('notifikasi').select('id', { count: 'exact', head: true }).eq('dibaca', false).then((r) => setBaru(r.count || 0));
+  }, []);
   const now = today();
   const open = debts.filter((d) => sisa(d) > 0);
   const total = (j) => open.filter((d) => d.jenis === j).reduce((a, d) => a + sisa(d), 0);
-  const kas = hitungUlangSisaKas(debts);
-  const rem = open.filter((d) => d.jenis === 'piutang' && dayDiff(d.tempo, now) <= 3)
+  const kas = hitungUlangSisaKas(debts, kasManual);
+  const rem = open.filter((d) => dayDiff(d.tempo, now) <= 3)
     .sort((a, b) => new Date(a.tempo) - new Date(b.tempo));
   const latest = [...open].sort((a, b) => new Date(b.pinjam) - new Date(a.pinjam)).slice(0, 5);
   const label = (d) => { const n = dayDiff(d.tempo, now); return n < 0 ? `Lewat ${-n} hari` : n === 0 ? 'Hari ini' : `H-${n}`; };
@@ -49,6 +54,14 @@ export default function BerandaScreen({ nav }) {
               {nama || 'INGETIN'}
             </T>
           </View>
+          <Pressable onPress={() => nav.push('Notif')} hitSlop={10} style={{ padding: 8 }}>
+            <Ionicons name="notifications" size={28} color="#fff" />
+            {baru > 0 && (
+              <View style={{ position: 'absolute', top: 2, right: 2, minWidth: 20, height: 20, borderRadius: 10, backgroundColor: C.red, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}>
+                <T style={{ color: '#fff', fontSize: 12, fontWeight: '900' }}>{baru > 9 ? '9+' : baru}</T>
+              </View>
+            )}
+          </Pressable>
         </View>
         <T style={{ color: '#DBEAFE', fontSize: 16, marginTop: 18 }}>Sisa Kas Bulan Ini</T>
         <T style={{ color: '#fff', fontSize: 38, fontWeight: '900' }} numberOfLines={1} adjustsFontSizeToFit>{(kas.sisa < 0 ? '-' : '') + rp(kas.sisa)}</T>
@@ -65,7 +78,7 @@ export default function BerandaScreen({ nav }) {
         <View style={{ margin: 16, marginBottom: 0, backgroundColor: C.yellowBg, borderRadius: 18, padding: 14, borderWidth: 2, borderColor: C.yellow }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
             <Ionicons name="notifications" size={24} color={C.yellowDark} />
-            <T style={{ fontWeight: '900', marginLeft: 8 }}>Perlu ditagih ({rem.length})</T>
+            <T style={{ fontWeight: '900', marginLeft: 8 }}>Perlu ditagih / dibayar ({rem.length})</T>
           </View>
           {rem.map((d) => {
             const p = person(d.personId);
@@ -76,8 +89,8 @@ export default function BerandaScreen({ nav }) {
                   <T style={{ fontWeight: '800', fontSize: 16 }} numberOfLines={1}>{p.nama} · {rp(sisa(d))}</T>
                   <T style={{ fontSize: 14, fontWeight: '800', color: status(d).lewat ? C.red : C.yellowDark }}>{label(d)}</T>
                 </View>
-                <Pressable onPress={() => kirimWA(p, d)} style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: C.green, alignItems: 'center', justifyContent: 'center', elevation: 3 }}>
-                  <Ionicons name="logo-whatsapp" size={28} color="#fff" />
+                <Pressable onPress={() => (d.jenis === 'piutang' ? kirimWA(p, d) : nav.push('PayForm', { debtId: d.id }))} style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: d.jenis === 'piutang' ? C.green : C.blue, alignItems: 'center', justifyContent: 'center', elevation: 3 }}>
+                  <Ionicons name={d.jenis === 'piutang' ? 'logo-whatsapp' : 'cash'} size={28} color="#fff" />
                 </Pressable>
               </View>
             );
@@ -88,6 +101,10 @@ export default function BerandaScreen({ nav }) {
       <View style={{ flexDirection: 'row', paddingHorizontal: 16, marginTop: 16, gap: 12 }}>
         <Aksi label="Catat Hutang Baru" icon="create" bg={C.blue} fg="#fff" onPress={() => nav.push('DebtForm')} />
         <Aksi label="Catat Pembayaran" icon="cash" bg={C.yellow} fg={C.navy} onPress={() => nav.push('PayForm')} />
+      </View>
+      <View style={{ flexDirection: 'row', paddingHorizontal: 16, marginTop: 12, gap: 12 }}>
+        <Aksi label="Laporan Bulanan" icon="stats-chart" bg="#fff" fg={C.blue} onPress={() => nav.push('Laporan')} />
+        <Aksi label="Kas Harian" icon="wallet" bg="#fff" fg={C.navy} onPress={() => nav.push('Kas')} />
       </View>
 
       <T style={{ fontWeight: '900', fontSize: 20, margin: 16, marginBottom: 8 }}>Belum lunas terbaru</T>

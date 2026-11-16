@@ -3,13 +3,14 @@ import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase, TERHUBUNG } from '../services/supabase';
 import { nomorWA } from '../core/phone';
+import { daftarPush } from '../services/push';
 
 const Ctx = createContext(null);
 export const useStore = () => useContext(Ctx);
 // Akun memakai No HP + PIN. Di Supabase disimpan sebagai email palsu + sandi (tanpa OTP).
 const EMAIL = (hp) => `${hp}@ingetin.app`;
 const SANDI = (pin) => `${pin}#ingetin`;
-const EMPTY = { persons: [], debts: [] };
+const EMPTY = { persons: [], debts: [], kas: [] };
 const p2 = (n) => String(n).padStart(2, '0');
 const fmt = (d) => { const x = new Date(d); return `${x.getFullYear()}-${p2(x.getMonth() + 1)}-${p2(x.getDate())}`; };
 const dari = (s) => new Date(`${s}T00:00:00`).toISOString();
@@ -41,10 +42,11 @@ export function StoreProvider({ children }) {
   // Ambil semua data dari cloud; kalau offline, pakai salinan terakhir.
   const muat = async (uid) => {
     try {
-      const [p, d, y] = await Promise.all([
+      const [p, d, y, k] = await Promise.all([
         supabase.from('persons').select('*').order('dibuat'),
         supabase.from('debts').select('*').order('dibuat'),
         supabase.from('payments').select('*').order('tanggal_bayar'),
+        supabase.from('kas_manual').select('*').order('tanggal'),
       ]);
       const err = p.error || d.error || y.error;
       if (err) throw err;
@@ -54,6 +56,7 @@ export function StoreProvider({ children }) {
         bayar[r.debt_id].push({ id: r.id, jumlah: Number(r.jumlah_bayar), tgl: dari(r.tanggal_bayar), ket: r.keterangan || '' });
       });
       const next = {
+        kas: (k.error ? [] : k.data).map((r) => ({ id: r.id, tipe: r.tipe, jumlah: Number(r.jumlah), tgl: dari(r.tanggal), ket: r.keterangan || '' })),
         persons: p.data.map((r) => ({ id: r.id, nama: r.nama, wa: r.no_wa || '' })),
         debts: d.data.map((r) => ({ id: r.id, personId: r.person_id, jenis: r.jenis, awal: Number(r.jumlah_awal), ket: r.keterangan || '',
           pinjam: dari(r.tanggal_pinjam), tempo: dari(r.jatuh_tempo), pays: bayar[r.id] || [] })),
@@ -82,6 +85,7 @@ export function StoreProvider({ children }) {
     }
 
     setProfile(prof);
+    daftarPush(uid);
     supabase.from('profiles').update({ terakhir_aktif: new Date().toISOString() }).eq('id', uid).then(() => {});
     await muat(uid);
     return null;
@@ -205,11 +209,14 @@ export function StoreProvider({ children }) {
   const addPay = (debtId, pay) => jalan(() => supabase.from('payments').insert({ user_id: profile.id, debt_id: debtId,
     jumlah_bayar: pay.jumlah, tanggal_bayar: fmt(pay.tgl), keterangan: pay.ket }));
 
+  const addKas = (f) => jalan(() => supabase.from('kas_manual').insert({ user_id: profile.id, tipe: f.tipe, jumlah: f.jumlah, tanggal: fmt(f.tgl), keterangan: f.ket }));
+  const deleteKas = (id) => jalan(() => supabase.from('kas_manual').delete().eq('id', id));
+
   const value = {
     ready, profile, phone: profile ? profile.no_hp : null, nama: profile ? profile.nama : '',
     kodeReferral: profile ? profile.kode_referral : '',
     isAdmin: !!profile && profile.role === 'admin_developer', sync, daftarDibuka, setDaftarDibuka,
-    ...data, login, register, logout, addDebt, updateDebt, deleteDebt, addPay,
+    ...data, addKas, deleteKas, login, register, logout, addDebt, updateDebt, deleteDebt, addPay,
     person: (id) => data.persons.find((p) => p.id === id),
     debtsOf: (pid) => data.debts.filter((d) => d.personId === pid),
   };

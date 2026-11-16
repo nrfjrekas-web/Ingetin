@@ -1,14 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Clipboard, ImageBackground, Modal, Pressable, Share, Switch, View } from 'react-native';
+import { Alert, ImageBackground, Modal, Pressable, Share, Switch, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
+import * as Clipboard from 'expo-clipboard';
 import { supabase } from '../services/supabase';
 import { useStore } from '../store/store';
 import { Avatar, Body, Btn, Card, Chip, Header, Input, Page, T } from '../components/ui';
 import { APP, C, addDays, tgl, today } from '../core/theme';
 
-const bannerImg = require('../../assets/banner-referral.png');
+const bannerImg = require('../../assets/banner-referral.jpg');
 
 const MenuRow = ({ icon, title, sub, color = C.blue, onPress, right, last }) => (
   <Pressable
@@ -76,13 +77,13 @@ export default function AkunScreen({ nav }) {
 
   const salinKode = () => {
     if (!kodeRef) return;
-    Clipboard.setString(kodeRef);
+    Clipboard.setStringAsync(kodeRef);
     Alert.alert('Tersalin', `Kode referral (${kodeRef}) berhasil disalin.`);
   };
 
   const bagikanGambarDanKode = async () => {
     const pesan = `Yuk pakai ${APP}, aplikasi catatan all transaksi!\n\nMasukkan Kode Referral saya saat daftar:\n*${kodeRef}*`;
-    Clipboard.setString(pesan);
+    Clipboard.setStringAsync(pesan);
     setSharingImg(true);
     try {
       const uri = await captureRef(posterRef, {

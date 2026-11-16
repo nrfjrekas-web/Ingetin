@@ -19,7 +19,7 @@ export function status(d) {
 
 // Dipanggil setiap render, jadi Sisa Kas selalu ikut berubah saat ada hutang/pembayaran ditambah, diubah, atau dihapus.
 // Sisa Kas Bulan Ini = pembayaran piutang yang masuk - pembayaran hutang yang keluar (bulan ini).
-export function hitungUlangSisaKas(debts, now = today()) {
+export function hitungUlangSisaKas(debts, kas = [], now = today()) {
   let masuk = 0, keluar = 0;
   debts.forEach((d) => d.pays.forEach((p) => {
     const x = new Date(p.tgl);
@@ -27,6 +27,12 @@ export function hitungUlangSisaKas(debts, now = today()) {
       if (d.jenis === 'piutang') masuk += p.jumlah; else keluar += p.jumlah;
     }
   }));
+  kas.forEach((k) => {
+    const x = new Date(k.tgl);
+    if (x.getFullYear() === now.getFullYear() && x.getMonth() === now.getMonth()) {
+      if (k.tipe === 'masuk') masuk += k.jumlah; else keluar += k.jumlah;
+    }
+  });
   return { masuk, keluar, sisa: masuk - keluar };
 }
 export const jam = (d) => { const x = new Date(d); const p = (n) => String(n).padStart(2, '0'); return `${tgl(x)} ${p(x.getHours())}:${p(x.getMinutes())}`; };

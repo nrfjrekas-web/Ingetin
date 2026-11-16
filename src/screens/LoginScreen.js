@@ -7,7 +7,7 @@ import { ADMIN_WA, C } from '../core/theme';
 import { nomorHP } from '../core/phone';
 import { bukaWA } from '../services/whatsapp';
 
-const logo = require('../../assets/icon.png');
+const logo = require('../../assets/logo.png');
 
 const PinBox = ({ label, value = '', onChange }) => {
   const inputRef = useRef(null);
