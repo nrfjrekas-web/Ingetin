@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { TextInput, View } from 'react-native';
 import { supabase } from '../services/supabase';
 import { useStore } from '../store/store';
-import { Avatar, Body, Card, Chip, Header, Page, T } from '../components/ui';
+import { Avatar, Body, Btn, Card, Chip, Header, Page, T } from '../components/ui';
 import { C, addDays, jam, tgl, today } from '../core/theme';
 
 const FILTER = ['Semua', 'Aktif Hari Ini', 'Baru Daftar', 'Tidak Aktif 7 Hari'];
@@ -40,6 +40,7 @@ export default function AdminUsers({ nav }) {
           <T style={{ fontWeight: '900', color: '#6D28D9' }}>ANDA - ADMIN DEVELOPER</T>
           <T style={{ fontSize: 14 }}>{nama} · {phone}</T>
         </Card>
+        <Btn icon="person-add" label="Buat Akun Baru" onPress={() => nav.push('AdminBuat')} />
         <TextInput value={q} onChangeText={setQ} placeholder="Cari nama / No HP" placeholderTextColor="#9CA3AF"
           style={{ minHeight: 52, borderWidth: 1.5, borderColor: C.line, borderRadius: 14, paddingHorizontal: 14, fontSize: 18, backgroundColor: '#fff', marginBottom: 10 }} />
         <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
