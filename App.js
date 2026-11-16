@@ -16,14 +16,18 @@ import AdminUsers from './src/screens/AdminUsers';
 import AdminUser from './src/screens/AdminUser';
 import AdminReports from './src/screens/AdminReports';
 import AdminSettings from './src/screens/AdminSettings';
+import NotifScreen from './src/screens/NotifScreen';
+import LaporanScreen from './src/screens/LaporanScreen';
+import KasScreen from './src/screens/KasScreen';
 import { C } from './src/core/theme';
 
-const logo = require('./assets/icon.png');
+const logo = require('./assets/logo.png');
 // Daftar layar. Tambah layar baru: buat file di src/screens lalu daftarkan di sini.
 const SCREENS = { Beranda: BerandaScreen, Daftar: DaftarScreen, Akun: AkunScreen, Person: PersonScreen, DebtForm: DebtFormScreen, PayForm: PayFormScreen,
-  Lapor: LaporScreen, AdminHome, AdminUsers, AdminUser, AdminReports, AdminSettings };
+  Lapor: LaporScreen, AdminHome, AdminUsers, AdminUser, AdminReports, AdminSettings,
+  Notif: NotifScreen, Laporan: LaporanScreen, Kas: KasScreen };
 // Menu bawah yang menyala untuk tiap layar.
-const AKTIF = { Beranda: 0, Daftar: 1, Person: 1, DebtForm: 2, PayForm: 3, Akun: 4, Lapor: 4, AdminHome: 4, AdminUsers: 4, AdminUser: 4, AdminReports: 4, AdminSettings: 4 };
+const AKTIF = { Beranda: 0, Daftar: 1, Person: 1, DebtForm: 2, PayForm: 3, Akun: 4, Lapor: 4, AdminHome: 4, AdminUsers: 4, AdminUser: 4, AdminReports: 4, AdminSettings: 4, Notif: 0, Laporan: 0, Kas: 0 };
 
 function Splash({ onDone }) {
   const s = useRef(new Animated.Value(0)).current;
