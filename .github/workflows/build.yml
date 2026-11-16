@@ -30,12 +30,14 @@ jobs:
           cp -r src app/src
           mkdir -p app/assets
           cp -r assets/. app/assets/
+          cp scripts/atur-app.js app/atur-app.js
+          if [ -f google-services.json ]; then cp google-services.json app/google-services.json; fi
           cd app
-          npx expo install @react-native-async-storage/async-storage expo-crypto @react-native-community/datetimepicker expo-linear-gradient @expo/vector-icons expo-updates @supabase/supabase-js react-native-url-polyfill react-native-view-shot expo-sharing
-          node -e "const f='app.json',j=require('./'+f);j.expo.name='INGETIN';j.expo.slug='ingetin';j.expo.icon='./assets/icon.png';j.expo.userInterfaceStyle='light';j.expo.runtimeVersion={policy:'appVersion'};j.expo.android={...(j.expo.android||{}),package:'id.ingetin.app',adaptiveIcon:{foregroundImage:'./assets/adaptive-icon.png',backgroundColor:'#1A92F1'}};require('fs').writeFileSync(f,JSON.stringify(j,null,2))"
-          echo '{"build":{"preview":{"channel":"preview","android":{"buildType":"apk"}}}}' > eas.json
+          npx expo install @react-native-async-storage/async-storage expo-crypto @react-native-community/datetimepicker expo-linear-gradient @expo/vector-icons expo-updates @supabase/supabase-js react-native-url-polyfill react-native-view-shot expo-sharing expo-clipboard expo-notifications expo-constants expo-image-picker expo-build-properties
+          node atur-app.js awal
+          echo '{"build":{"preview":{"channel":"preview","android":{"buildType":"apk"}},"production":{"channel":"production","android":{"buildType":"app-bundle"}}}}' > eas.json
           eas init --force --non-interactive
-          node -e "const f='app.json',j=require('./'+f);j.expo.updates={url:'https://u.expo.dev/'+j.expo.extra.eas.projectId};require('fs').writeFileSync(f,JSON.stringify(j,null,2))"
+          node atur-app.js updates
       - name: Kirim pembaruan otomatis ke HP
         if: github.event_name == 'push' || inputs.aksi == 'update'
         working-directory: app
