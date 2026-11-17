@@ -62,6 +62,7 @@ export default function AdminHome({ nav }) {
         )}
         <Btn icon="people" label="Daftar Pengguna" onPress={() => nav.push('AdminUsers')} />
         <Btn outline icon="chatbubbles" label="Laporan Masalah" onPress={() => nav.push('AdminReports')} />
+        <Btn outline icon="megaphone" label="Kirim Notifikasi" onPress={() => nav.push('AdminNotif')} />
         <Btn outline icon="settings" label="Pengaturan & Log" onPress={() => nav.push('AdminSettings')} />
         <T style={{ fontWeight: '900', fontSize: 18, marginVertical: 8 }}>Pengguna Terbaru</T>
         {users.map((u) => (

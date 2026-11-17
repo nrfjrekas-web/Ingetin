@@ -66,7 +66,7 @@ export default function BerandaScreen({ nav }) {
         <T style={{ color: '#DBEAFE', fontSize: 16, marginTop: 18 }}>Sisa Kas Bulan Ini</T>
         <T style={{ color: '#fff', fontSize: 38, fontWeight: '900' }} numberOfLines={1} adjustsFontSizeToFit>{(kas.sisa < 0 ? '-' : '') + rp(kas.sisa)}</T>
         <T style={{ color: '#BFDBFE', fontSize: 13 }}>{`Uang masuk ${rp(kas.masuk)} - uang keluar ${rp(kas.keluar)} bulan ini`}</T>
-        <T style={{ color: sync === 'gagal' ? '#FDE68A' : '#BFDBFE', fontSize: 13, fontWeight: '800', marginTop: 2 }}>{sync === 'ok' ? '' : sync === 'menyimpan' ? 'Menyimpan...' : 'Belum tersimpan, cek internet'}</T>
+        <T style={{ color: sync === 'gagal' ? '#FDE68A' : '#BFDBFE', fontSize: 13, fontWeight: '800', marginTop: 2 }}>{sync === 'ok' ? 'Tersimpan di Cloud ✓' : sync === 'menyimpan' ? 'Menyimpan...' : 'Belum tersimpan, cek internet'}</T>
       </Grad>
 
       <View style={{ flexDirection: 'row', paddingHorizontal: 16, marginTop: -32, gap: 12 }}>
