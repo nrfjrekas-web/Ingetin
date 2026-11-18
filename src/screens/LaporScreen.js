@@ -1,31 +1,42 @@
-import React, { useState } from 'react';
-import { Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../services/supabase';
 import { useStore } from '../store/store';
-import { Body, Btn, Err, Header, Input, Page } from '../components/ui';
+import Chat from '../components/Chat';
+import { Header, Page, T } from '../components/ui';
+import { C } from '../core/theme';
 
+// Laporkan Masalah = percakapan dengan Admin. Riwayat tersimpan dan Admin bisa membalas.
 export default function LaporScreen({ nav }) {
   const { profile } = useStore();
-  const [isi, setIsi] = useState('');
-  const [err, setErr] = useState(null);
-  const [busy, setBusy] = useState(false);
-  const kirim = async () => {
-    if (isi.trim().length < 5) return setErr('Tulis kendala Anda dulu (minimal 5 huruf).');
-    setBusy(true);
-    const r = await supabase.from('reports').insert({ user_id: profile.id, isi: isi.trim() });
-    setBusy(false);
-    if (r.error) return setErr('Belum terkirim, cek internet.');
-    nav.pop();
-    Alert.alert('Terkirim', 'Laporan Anda sudah masuk ke Admin.');
+  const [pesan, setPesan] = useState([]);
+  const muat = async () => {
+    const r = await supabase.from('pesan_bantuan').select('*').eq('user_id', profile.id).order('dibuat');
+    if (!r.data) return;
+    setPesan(r.data);
+    if (r.data.some((m) => m.pengirim === 'admin' && !m.dibaca_user)) {
+      supabase.from('pesan_bantuan').update({ dibaca_user: true }).eq('user_id', profile.id).eq('pengirim', 'admin').eq('dibaca_user', false).then(() => {});
+    }
+  };
+  useEffect(() => { muat(); const t = setInterval(muat, 6000); return () => clearInterval(t); }, []);
+  const kirim = async (isi) => {
+    const r = await supabase.from('pesan_bantuan').insert({ user_id: profile.id, pengirim: 'user', isi, dibaca_user: true });
+    if (r.error) { Alert.alert('Belum terkirim', 'Cek internet lalu coba lagi.'); return false; }
+    await muat();
+    return true;
   };
   return (
     <Page>
       <Header title="Laporkan Masalah" onBack={nav.pop} />
-      <Body>
-        <Input label="Tulis kendala Anda" value={isi} onChangeText={setIsi} multiline numberOfLines={6} textAlignVertical="top" />
-        <Err>{err}</Err>
-        <Btn icon="send" label="Kirim Laporan" onPress={kirim} disabled={busy} />
-      </Body>
+      <Chat pesan={pesan} saya="user" onKirim={kirim}
+        kosong={(
+          <View style={{ alignItems: 'center', padding: 24 }}>
+            <Ionicons name="chatbubbles-outline" size={48} color={C.muted} />
+            <T style={{ textAlign: 'center', marginTop: 8, fontWeight: '800' }}>Ceritakan kendalamu</T>
+            <T style={{ textAlign: 'center', fontSize: 14, color: C.muted }}>Tulis di bawah. Admin akan membalas di sini, dan kamu mendapat notifikasi saat ada balasan.</T>
+          </View>
+        )} />
     </Page>
   );
 }

@@ -25,8 +25,8 @@ export default function AdminHome({ nav }) {
       setSt(s.data);
       const u = await supabase.from('profiles').select('id,nama,no_hp,dibuat').eq('role', 'user').order('dibuat', { ascending: false }).limit(5);
       setUsers(u.data || []);
-      const l = await supabase.from('reports').select('id,isi,status,dibuat,profiles(nama)').order('dibuat', { ascending: false }).limit(5);
-      setLap(l.data || []);
+      const l = await supabase.from('pesan_bantuan').select('id,isi,dibaca_admin,dibuat,profiles(nama)').eq('pengirim', 'user').order('dibuat', { ascending: false }).limit(5);
+      setLap((l.data || []).map((x) => ({ ...x, status: x.dibaca_admin ? 'Selesai' : 'Baru' })));
     })();
   }, []);
   const hari = st ? st.transaksi_7_hari : [];

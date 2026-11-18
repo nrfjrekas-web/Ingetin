@@ -205,6 +205,7 @@ export default function AkunScreen({ nav }) {
           <MenuRow icon="people-circle" color={C.green} title={`Anggota yang Diundang (${anggota.length})`} onPress={() => setModalAnggota(true)} />
           <MenuRow icon="flag" color="#D97706" title="Laporkan Masalah" onPress={() => nav.push('Lapor')} />
           <MenuRow icon="help-circle" color="#7C3AED" title="Pusat Bantuan" onPress={() => nav.push('Bantuan')} />
+          <MenuRow icon="information-circle" color={C.blue} title="Tentang Kami" onPress={() => nav.push('Tentang')} />
           <MenuRow icon="trash" color={C.red} title="Hapus Akun" onPress={() => { setPinHapus(''); setModalHapus(true); }} last />
         </Card>
 

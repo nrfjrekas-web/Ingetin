@@ -21,15 +21,19 @@ import LaporanScreen from './src/screens/LaporanScreen';
 import KasScreen from './src/screens/KasScreen';
 import AdminBuat from './src/screens/AdminBuat';
 import AdminNotif from './src/screens/AdminNotif';
+import BantuanScreen from './src/screens/BantuanScreen';
+import TentangScreen from './src/screens/TentangScreen';
+import AdminChat from './src/screens/AdminChat';
+import ErrorBoundary from './src/components/ErrorBoundary';
 import { C } from './src/core/theme';
 
 const logo = require('./assets/logo.png');
 // Daftar layar. Tambah layar baru: buat file di src/screens lalu daftarkan di sini.
 const SCREENS = { Beranda: BerandaScreen, Daftar: DaftarScreen, Akun: AkunScreen, Person: PersonScreen, DebtForm: DebtFormScreen, PayForm: PayFormScreen,
   Lapor: LaporScreen, AdminHome, AdminUsers, AdminUser, AdminReports, AdminSettings,
-  Notif: NotifScreen, Laporan: LaporanScreen, Kas: KasScreen, AdminBuat, AdminNotif };
+  Notif: NotifScreen, Laporan: LaporanScreen, Kas: KasScreen, AdminBuat, AdminNotif, Bantuan: BantuanScreen, Tentang: TentangScreen, AdminChat };
 // Menu bawah yang menyala untuk tiap layar.
-const AKTIF = { Beranda: 0, Daftar: 1, Person: 1, DebtForm: 2, PayForm: 3, Akun: 4, Lapor: 4, AdminHome: 4, AdminUsers: 4, AdminUser: 4, AdminReports: 4, AdminSettings: 4, Notif: 0, Laporan: 0, Kas: 0, AdminBuat: 4, AdminNotif: 4 };
+const AKTIF = { Beranda: 0, Daftar: 1, Person: 1, DebtForm: 2, PayForm: 3, Akun: 4, Lapor: 4, AdminHome: 4, AdminUsers: 4, AdminUser: 4, AdminReports: 4, AdminSettings: 4, Notif: 0, Laporan: 0, Kas: 0, AdminBuat: 4, AdminNotif: 4, Bantuan: 4, Tentang: 4, AdminChat: 4 };
 
 function Splash({ onDone }) {
   const s = useRef(new Animated.Value(0)).current;
@@ -66,10 +70,12 @@ function Router() {
   if (splash || !ready) return <Splash onDone={() => setSplash(false)} />;
   if (!phone) return <LoginScreen />;
   const top = stack[stack.length - 1];
-  const Screen = SCREENS[top.name];
+  const Screen = SCREENS[top.name] || BerandaScreen; // jaga-jaga: layar tak dikenal tidak membuat aplikasi tertutup
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      <FadeIn key={top.name + stack.length}><Screen nav={nav} {...top.params} /></FadeIn>
+      <FadeIn key={top.name + stack.length}>
+        <ErrorBoundary onReset={() => nav.tab('Beranda')}><Screen nav={nav} {...top.params} /></ErrorBoundary>
+      </FadeIn>
       <BottomNav aktif={AKTIF[top.name]} onTab={nav.tab} />
     </View>
   );

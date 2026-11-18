@@ -133,6 +133,16 @@ export function StoreProvider({ children }) {
     if (nm.trim().length < 2) return 'Nama lengkap wajib diisi.';
     if (!/^\d{6}$/.test(pin)) return 'PIN harus 6 angka.';
     if (pin !== pin2) return 'Ulangi PIN tidak sama.';
+
+    // Cek kode referral lebih dulu, supaya kode salah tidak membuat akun setengah jadi.
+    let pengundang = null;
+    if (kode && kode.trim()) {
+      const c = await supabase.rpc('cari_pengundang', { p_kode: kode.trim() });
+      if (c.error) return `Kode referral tidak bisa dicek: ${c.error.message}`;
+      if (!c.data) return 'Kode referral tidak ditemukan. Cek lagi atau kosongkan kolomnya.';
+      pengundang = c.data;
+    }
+
     let r = await supabase.auth.signUp({ email: EMAIL(hp), password: SANDI(pin) });
     if (r.error) {
       if (!/registered|exists/i.test(r.error.message)) return 'Gagal daftar: ' + r.error.message;
@@ -141,13 +151,6 @@ export function StoreProvider({ children }) {
     }
     if (!r.data.session) return 'Di Supabase, matikan dulu "Confirm email" (Authentication > Providers > Email).';
     const uid = r.data.session.user.id;
-
-    // Cari pengundang lewat fungsi database (aman, tidak membuka data user lain).
-    let pengundang = null;
-    if (kode) {
-      const c = await supabase.rpc('cari_pengundang', { p_kode: kode });
-      pengundang = c.data || null;
-    }
 
     // Kalau kode referral kebetulan bentrok (sangat jarang), coba lagi dengan kode baru.
     let ins;
