@@ -21,8 +21,12 @@ export default function AdminChat({ nav, id }) {
   useEffect(() => {
     supabase.from('profiles').select('nama,no_hp').eq('id', id).maybeSingle().then((r) => setU(r.data));
     muat();
-    const t = setInterval(muat, 6000);
-    return () => clearInterval(t);
+    const t = setInterval(muat, 15000); // cadangan bila koneksi langsung terputus
+    // Pesan baru dari pengguna muncul seketika, seperti aplikasi chat.
+    const ch = supabase.channel('pb-admin-' + id)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pesan_bantuan', filter: `user_id=eq.${id}` }, () => muat())
+      .subscribe();
+    return () => { clearInterval(t); supabase.removeChannel(ch); };
   }, []);
   const kirim = async (isi) => {
     const r = await supabase.from('pesan_bantuan').insert({ user_id: id, pengirim: 'admin', isi, dibaca_admin: true });

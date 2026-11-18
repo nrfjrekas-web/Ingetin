@@ -19,7 +19,15 @@ export default function LaporScreen({ nav }) {
       supabase.from('pesan_bantuan').update({ dibaca_user: true }).eq('user_id', profile.id).eq('pengirim', 'admin').eq('dibaca_user', false).then(() => {});
     }
   };
-  useEffect(() => { muat(); const t = setInterval(muat, 6000); return () => clearInterval(t); }, []);
+  useEffect(() => {
+    muat();
+    const t = setInterval(muat, 15000); // cadangan bila koneksi langsung terputus
+    // Pesan baru dari Admin muncul seketika (tanpa menunggu), seperti aplikasi chat.
+    const ch = supabase.channel('pb-' + profile.id)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pesan_bantuan', filter: `user_id=eq.${profile.id}` }, () => muat())
+      .subscribe();
+    return () => { clearInterval(t); supabase.removeChannel(ch); };
+  }, []);
   const kirim = async (isi) => {
     const r = await supabase.from('pesan_bantuan').insert({ user_id: profile.id, pengirim: 'user', isi, dibaca_user: true });
     if (r.error) { Alert.alert('Belum terkirim', 'Cek internet lalu coba lagi.'); return false; }
