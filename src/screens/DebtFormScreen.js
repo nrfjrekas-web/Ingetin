@@ -39,11 +39,6 @@ export default function DebtFormScreen({ nav, debtId }) {
           <Chip label="Saya hutang" color={C.red} selected={jenis === 'hutang'} onPress={() => setJenis('hutang')} />
         </View>
         <Input label="Nama orang" value={nama} onChangeText={setNama} />
-        {!d && (
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-            {persons.map((p) => <Chip key={p.id} label={p.nama} onPress={() => { setNama(p.nama); setWa(p.wa); }} />)}
-          </View>
-        )}
         <Input label="No WA (boleh kosong)" value={wa} onChangeText={(v) => setWa(v.replace(/\D/g, ''))} keyboardType="phone-pad" maxLength={14} placeholder="08xxxxxxxxxx" />
         <UangInput label="Jumlah" value={jumlah} onChange={setJumlah} />
         <Input label="Keterangan (contoh: Bon Beras)" value={ket} onChangeText={setKet} />
